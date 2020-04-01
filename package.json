@@ -1,0 +1,8 @@
+{
+  "name": "realtime",
+  "version": "1.0.0",
+  "description": "A client and signaling server for WebRTC",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {}
+}
