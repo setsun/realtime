@@ -4,7 +4,9 @@
 
 A signaling server & web client for WebRTC.
 
-The goal of this library is to absorb some of the complexity of WebRTC, and handle negotiating the connection between two peers. It handles this through some of the following:
+The goal of this library is to absorb some of the complexity of WebRTC, and handle negotiating the connection between two peers, allowing the direct transfer of any arbitrary data between the two peers. This may be well-suited for video chat, game data updates, or other applications that require real-time performance.
+
+It handles this through some of the following:
 
 - Exchanging [`RTCPeerConnection` offers](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createOffer) between peers.
 - Exchanging [`RTCPeerConnection` answers](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createAnswer) between peers.
