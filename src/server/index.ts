@@ -13,11 +13,11 @@ type BroadcastArgs = {
 }
 
 export class SignalingServer {
-  activeSockets: Map<String, WebSocket> = new Map();
-  socketServer: WebSocketServer;
+  #activeSockets: Map<String, WebSocket> = new Map();
+  #socketServer: WebSocketServer;
 
   constructor({ server }: SignalingServerConfig) {
-    this.socketServer = new WebSocketServer({ server });
+    this.#socketServer = new WebSocketServer({ server });
     this.setupSockets();
   }
 
@@ -27,7 +27,7 @@ export class SignalingServer {
   }
 
   broadcast({ currentSocket, eventName, data }: BroadcastArgs) {
-    this.socketServer.clients.forEach((client) => {
+    this.#socketServer.clients.forEach((client) => {
       if (client.readyState !== WebSocket.OPEN) return;
       if (client === currentSocket) return;
 
@@ -38,7 +38,8 @@ export class SignalingServer {
   }
 
   setupSockets() {
-    const { socketServer, activeSockets } = this;
+    const socketServer = this.#socketServer;
+    const activeSockets = this.#activeSockets;
 
     socketServer.on("connection", (socket, request) => {
       const socketKey = this.getSocketKey(request);

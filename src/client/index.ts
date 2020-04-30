@@ -11,40 +11,40 @@ const defaultIceServers = [
 ];
 
 export class RTCClient {
-  me = '';
-  users = new Set<string>();
-  connections = new Map<string, RTCPeerConnection>();
-  channels = new Map<string, RTCDataChannel>();
-  socket: WebSocket;
-  iceServers: RTCConfiguration['iceServers'];
+  #me = '';
+  #users = new Set<string>();
+  #connections = new Map<string, RTCPeerConnection>();
+  #channels = new Map<string, RTCDataChannel>();
+  #socket: WebSocket;
+  #iceServers: RTCConfiguration['iceServers'];
 
   constructor({ url, iceServers }: RTCClientConfig) {
-    this.socket = new WebSocket(url);
-    this.iceServers = iceServers ?? defaultIceServers;
+    this.#socket = new WebSocket(url);
+    this.#iceServers = iceServers ?? defaultIceServers;
   }
 
-  getKey = (remoteId: string) => `${this.me}-${remoteId}`;
+  getKey = (remoteId: string) => `${this.#me}-${remoteId}`;
 
   setConnection = (remoteId: string, localConnection: RTCPeerConnection) =>
-    this.connections.set(this.getKey(remoteId), localConnection);
+    this.#connections.set(this.getKey(remoteId), localConnection);
 
   getConnection = (remoteId: string) =>
-    this.connections.get(this.getKey(remoteId));
+    this.#connections.get(this.getKey(remoteId));
 
   setChannel = (remoteId: string, localChannel: RTCDataChannel) =>
-    this.channels.set(this.getKey(remoteId), localChannel);
+    this.#channels.set(this.getKey(remoteId), localChannel);
 
   getChannel = (remoteId: string) =>
-    this.channels.get(this.getKey(remoteId));
+    this.#channels.get(this.getKey(remoteId));
 
   createLocalPeerConnection = async (remoteId: string) => {
-    const { iceServers } = this;
+    const iceServers = this.#iceServers;
     const localConnection = new RTCPeerConnection({ iceServers });
 
     localConnection.onicecandidate = ({ candidate }) => {
       if (!candidate) return;
 
-      this.socket.emit(SignalingEvents.SendCandidate, {
+      this.#socket.emit(SignalingEvents.SendCandidate, {
         candidate,
         to: remoteId
       });
@@ -68,34 +68,34 @@ export class RTCClient {
     const offer = await localConnection.createOffer();
     await localConnection.setLocalDescription(offer);
 
-    this.socket.emit(SignalingEvents.SendOffer, {
+    this.#socket.emit(SignalingEvents.SendOffer, {
       offer: localConnection.localDescription,
       to: remoteId
     });
   }
 
   updateAllChannels = (data: Object) => {
-    for (let [_, channel] of this.channels) {
+    for (let [_, channel] of this.#channels) {
       channel.send(JSON.stringify(data));
     }
   }
 
   initialize = (onSignal) => {
-    const { socket } = this;
+    const socket = this.#socket;
 
     socket.on(SignalingEvents.Initialize, ({ users, me }) => {
-      this.users = new Set(users);
-      this.me = me;
+      this.#users = new Set(users);
+      this.#me = me;
       onSignal(this);
     });
 
     socket.on(SignalingEvents.UserConnected, ({ user }) => {
-      this.users.add(user);
+      this.#users.add(user);
       onSignal(this);
     });
 
     socket.on(SignalingEvents.UserDisconnected, ({ user }) => {
-      this.users.delete(user);
+      this.#users.delete(user);
       onSignal(this);
     });
 
@@ -128,6 +128,6 @@ export class RTCClient {
   }
 
   close = () => {
-    this.socket.close();
+    this.#socket.close();
   }
 }
