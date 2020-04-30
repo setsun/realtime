@@ -1,5 +1,5 @@
-import { Server as HTTPServer, IncomingMessage } from "http";
-import WebSocket, { Server as WebSocketServer } from "ws";
+import { Server as HTTPServer } from "http";
+import SocketIO, { Server as SocketIOServer, Socket } from "socket.io";
 import {
   SignalingEvents,
   SendOfferPayload,
@@ -11,52 +11,30 @@ type SignalingServerConfig = {
   server: HTTPServer;
 }
 
-type BroadcastArgs = {
-  currentSocket: WebSocket;
-  eventName: string;
-  data: Object;
-}
-
 export class SignalingServer {
-  #activeSockets: Map<String, WebSocket> = new Map();
-  #socketServer: WebSocketServer;
+  #activeSockets: Map<String, Socket> = new Map();
+  #socketServer: SocketIOServer;
 
   constructor({ server }: SignalingServerConfig) {
-    this.#socketServer = new WebSocketServer({ server });
+    this.#socketServer = SocketIO(server);
     this.setupSockets();
-  }
-
-  getSocketKey(request: IncomingMessage) {
-    const keys = request.headers['sec-websocket-key'];
-    return Array.isArray(keys) ? keys.join('') : keys;
-  }
-
-  broadcast({ currentSocket, eventName, data }: BroadcastArgs) {
-    this.#socketServer.clients.forEach((client) => {
-      if (client.readyState !== WebSocket.OPEN) return;
-      if (client === currentSocket) return;
-
-      client.emit(eventName, () => {
-        return data;
-      });
-    });
   }
 
   setupSockets() {
     const socketServer = this.#socketServer;
     const activeSockets = this.#activeSockets;
 
-    socketServer.on("connection", (socket, request) => {
-      const socketKey = this.getSocketKey(request);
+    socketServer.on("connection", (socket) => {
+      const socketId = socket.id;
 
-      console.log("Connect", { socketKey });
+      console.log("Connect", { socketId });
 
-      if (activeSockets.has(socketKey)) {
+      if (activeSockets.has(socketId)) {
         return;
       }
 
       // add user to current active sockets
-      activeSockets.set(socketKey, socket);
+      activeSockets.set(socketId, socket);
 
       const activeSocketIds = [...activeSockets.keys()];
 
@@ -64,31 +42,23 @@ export class SignalingServer {
 
       // emit current socket key, and active users to current client
       socket.emit(SignalingEvents.Initialize, {
-        me: socketKey,
+        me: socketId,
         users: activeSocketIds,
       });
 
       // broadcast new user connection to all other clients
-      this.broadcast({
-        currentSocket: socket,
-        eventName: SignalingEvents.UserConnected,
-        data: {
-          user: socketKey
-        }
+      socket.broadcast.emit(SignalingEvents.UserConnected, {
+        user: socketId,
       });
 
       socket.on("disconnect", () => {
-        console.log("Disconnect", { socketKey });
+        console.log("Disconnect", { socketId });
 
-        activeSockets.delete(socketKey);
+        activeSockets.delete(socketId);
 
         // broadcast user disconnection to all other clients
-        this.broadcast({
-          currentSocket: socket,
-          eventName: SignalingEvents.UserDisconnected,
-          data: {
-            user: socketKey
-          }
+        socket.broadcast.emit(SignalingEvents.UserDisconnected, {
+          user: socket.id
         });
       });
 
@@ -96,9 +66,9 @@ export class SignalingServer {
       socket.on(SignalingEvents.SendOffer, ({ to, offer }: SendOfferPayload) => {
         console.log(SignalingEvents.SendOffer, { to, offer });
 
-        activeSockets.get(to).emit(SignalingEvents.ReceiveOffer, {
+        socket.to(to).emit(SignalingEvents.ReceiveOffer, {
           offer,
-          from: socketKey,
+          from: socketId,
         });
       });
 
@@ -106,18 +76,18 @@ export class SignalingServer {
       socket.on(SignalingEvents.SendAnswer, ({ to, answer }: SendAnswerPayload) => {
         console.log(SignalingEvents.SendAnswer, { to, answer });
 
-        activeSockets.get(to).emit(SignalingEvents.ReceiveAnswer, {
+        socket.to(to).emit(SignalingEvents.ReceiveAnswer, {
           answer,
-          from: socketKey,
+          from: socketId,
         });
       });
 
       socket.on(SignalingEvents.SendCandidate, ({ to, candidate }: SendCandidatePayload) => {
         console.log(SignalingEvents.SendCandidate, { to, candidate });
 
-        activeSockets.get(to).emit(SignalingEvents.ReceiveCandidate, {
+        socket.to(to).emit(SignalingEvents.ReceiveCandidate, {
           candidate,
-          from: socketKey
+          from: socketId
         });
       });
     });
