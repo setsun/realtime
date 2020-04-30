@@ -1,5 +1,10 @@
+import io from "socket.io-client";
+
 import {
   SignalingEvents,
+  InitializePayload,
+  UserConnectedPayload,
+  UserDisconnectedPayload,
   ReceiveOfferPayload,
   ReceiveAnswerPayload,
   ReceiveCandidatePayload
@@ -17,14 +22,14 @@ const defaultIceServers = [
 
 export class RTCClient {
   #me = '';
+  #socket: SocketIOClient.Socket;
   #users = new Set<string>();
   #connections = new Map<string, RTCPeerConnection>();
   #channels = new Map<string, RTCDataChannel>();
-  #socket: WebSocket;
   #iceServers: RTCConfiguration['iceServers'];
 
   constructor({ url, iceServers }: RTCClientConfig) {
-    this.#socket = new WebSocket(url);
+    this.#socket = io.connect(url);
     this.#iceServers = iceServers ?? defaultIceServers;
   }
 
@@ -88,18 +93,18 @@ export class RTCClient {
   initialize = (onSignal) => {
     const socket = this.#socket;
 
-    socket.on(SignalingEvents.Initialize, ({ users, me }) => {
+    socket.on(SignalingEvents.Initialize, ({ users, me }: InitializePayload) => {
       this.#users = new Set(users);
       this.#me = me;
       onSignal(this);
     });
 
-    socket.on(SignalingEvents.UserConnected, ({ user }) => {
+    socket.on(SignalingEvents.UserConnected, ({ user }: UserConnectedPayload) => {
       this.#users.add(user);
       onSignal(this);
     });
 
-    socket.on(SignalingEvents.UserDisconnected, ({ user }) => {
+    socket.on(SignalingEvents.UserDisconnected, ({ user }: UserDisconnectedPayload) => {
       this.#users.delete(user);
       onSignal(this);
     });
