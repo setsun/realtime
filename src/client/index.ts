@@ -1,24 +1,26 @@
-import io from "socket.io-client";
 import { SignalingEvents } from "../constants";
 
-const { RTCPeerConnection } = window;
+type RTCClientConfig = {
+  url: string;
+  iceServers?: RTCConfiguration['iceServers']
+}
 
-const peerConnectionConfig = {
-  iceServers: [
-    { urls: 'stun:stun.services.mozilla.com' },
-    { urls: 'stun:stun.l.google.com:19302' },
-  ]
-};
+const defaultIceServers = [
+  { urls: 'stun:stun.services.mozilla.com' },
+  { urls: 'stun:stun.l.google.com:19302' },
+];
 
 export class RTCClient {
   me = '';
   users = new Set<string>();
   connections = new Map<string, RTCPeerConnection>();
   channels = new Map<string, RTCDataChannel>();
-  socket;
+  socket: WebSocket;
+  iceServers: RTCConfiguration['iceServers'];
 
-  constructor(serverUrl) {
-    this.socket = io.connect(serverUrl);
+  constructor({ url, iceServers }: RTCClientConfig) {
+    this.socket = new WebSocket(url);
+    this.iceServers = iceServers ?? defaultIceServers;
   }
 
   getKey = (remoteId: string) => `${this.me}-${remoteId}`;
@@ -36,7 +38,8 @@ export class RTCClient {
     this.channels.get(this.getKey(remoteId));
 
   createLocalPeerConnection = async (remoteId: string) => {
-    const localConnection = new RTCPeerConnection(peerConnectionConfig);
+    const { iceServers } = this;
+    const localConnection = new RTCPeerConnection({ iceServers });
 
     localConnection.onicecandidate = ({ candidate }) => {
       if (!candidate) return;
@@ -124,7 +127,7 @@ export class RTCClient {
     });
   }
 
-  cleanup = () => {
-    this.socket.removeAllListeners();
+  close = () => {
+    this.socket.close();
   }
 }
