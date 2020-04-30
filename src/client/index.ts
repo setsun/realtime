@@ -1,4 +1,9 @@
-import { SignalingEvents } from "../constants";
+import {
+  SignalingEvents,
+  ReceiveOfferPayload,
+  ReceiveAnswerPayload,
+  ReceiveCandidatePayload
+} from "../types";
 
 type RTCClientConfig = {
   url: string;
@@ -99,7 +104,7 @@ export class RTCClient {
       onSignal(this);
     });
 
-    socket.on(SignalingEvents.ReceiveOffer, async ({ offer, from }) => {
+    socket.on(SignalingEvents.ReceiveOffer, async ({ offer, from }: ReceiveOfferPayload) => {
       const localConnection = await this.createLocalPeerConnection(from);
 
       await localConnection.setRemoteDescription(offer);
@@ -114,13 +119,13 @@ export class RTCClient {
       onSignal(this);
     });
 
-    socket.on(SignalingEvents.ReceiveAnswer, async ({ answer, from }) => {
+    socket.on(SignalingEvents.ReceiveAnswer, async ({ answer, from }: ReceiveAnswerPayload) => {
       const localConnection = this.getConnection(from);
       await localConnection.setRemoteDescription(answer);
       onSignal(this);
     });
 
-    socket.on(SignalingEvents.ReceiveCandidate, async ({ candidate, from }) => {
+    socket.on(SignalingEvents.ReceiveCandidate, async ({ candidate, from }: ReceiveCandidatePayload) => {
       const localConnection = this.getConnection(from);
       await localConnection.addIceCandidate(candidate);
       onSignal(this);
