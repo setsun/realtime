@@ -35,5 +35,24 @@ enum SignalingEvents {
 ### SignalingServer
 The signaling server is responsible for negotiating a `RTCPeerConnection` between 2 clients. Once the peer connection is established, all data is sent between the two clients without the need of the intermediate server.
 
+#### Example
+```tsx
+import { SignalingServer } from "@raycaster/realtime";
+import { createServer } from "http";
+
+// attach the signaling server to the top-level http server
+const httpServer = createServer();
+const signalingServer = new SignalingServer({ server: httpServer });
+
+httpServer.listen(3000);
+```
+
 ### RTCClient
 The RTC client is meant to be used in the browser, and initiates a connection request through the included signaling server to another peer. Once the connection is established, the two peers are able to send data directly to each other.
+
+#### Example
+```tsx
+import { RTCClient } from "@raycaster/realtime";
+
+const client = new RTCClient({ url: 'ws://localhost:3000' });
+```
