@@ -18,17 +18,19 @@ It handles this through some of the following:
 ### SignalingEvents
 Signaling events are the set of events that `realtime` uses internally for connecting two peers via WebRTC.
 
+The static types for the event types / event payloads are shared across the client and server.
+
 ```tsx
 enum SignalingEvents {
   Initialize = "Initialize",
   UserConnected = "UserConnected",
   UserDisconnected = "UserDisconnected",
-  SendCandidate = "SendCandidate",
-  ReceiveCandidate = "ReceiveCandidate",
   SendOffer = "SendOffer",
   ReceiveOffer = "ReceiveOffer",
   SendAnswer = "SendAnswer",
   ReceiveAnswer = "ReceiveAnswer",
+  SendCandidate = "SendCandidate",
+  ReceiveCandidate = "ReceiveCandidate",
 }
 ```
 

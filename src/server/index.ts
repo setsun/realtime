@@ -1,6 +1,11 @@
 import { Server as HTTPServer, IncomingMessage } from "http";
 import WebSocket, { Server as WebSocketServer } from "ws";
-import { SignalingEvents } from "../constants";
+import {
+  SignalingEvents,
+  SendOfferPayload,
+  SendAnswerPayload,
+  SendCandidatePayload
+} from "../types";
 
 type SignalingServerConfig = {
   server: HTTPServer;
@@ -88,7 +93,7 @@ export class SignalingServer {
       });
 
       // establish the intial RTC offer
-      socket.on(SignalingEvents.SendOffer, ({ to, offer }: any) => {
+      socket.on(SignalingEvents.SendOffer, ({ to, offer }: SendOfferPayload) => {
         console.log(SignalingEvents.SendOffer, { to, offer });
 
         activeSockets.get(to).emit(SignalingEvents.ReceiveOffer, {
@@ -98,7 +103,7 @@ export class SignalingServer {
       });
 
       // confirm the RTC answer and connect the two clients
-      socket.on(SignalingEvents.SendAnswer, ({ to, answer }: any) => {
+      socket.on(SignalingEvents.SendAnswer, ({ to, answer }: SendAnswerPayload) => {
         console.log(SignalingEvents.SendAnswer, { to, answer });
 
         activeSockets.get(to).emit(SignalingEvents.ReceiveAnswer, {
@@ -107,7 +112,7 @@ export class SignalingServer {
         });
       });
 
-      socket.on(SignalingEvents.SendCandidate, ({ to, candidate }: any) => {
+      socket.on(SignalingEvents.SendCandidate, ({ to, candidate }: SendCandidatePayload) => {
         console.log(SignalingEvents.SendCandidate, { to, candidate });
 
         activeSockets.get(to).emit(SignalingEvents.ReceiveCandidate, {
