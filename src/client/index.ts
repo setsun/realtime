@@ -41,11 +41,13 @@ export class RTCClient {
   getConnection = (remoteId: string) =>
     this.#connections.get(this.getKey(remoteId));
 
-  setChannel = (remoteId: string, localChannel: RTCDataChannel) =>
-    this.#channels.set(this.getKey(remoteId), localChannel);
+  getChannels = () => this.#channels
 
   getChannel = (remoteId: string) =>
     this.#channels.get(this.getKey(remoteId));
+
+  setChannel = (remoteId: string, localChannel: RTCDataChannel) =>
+    this.#channels.set(this.getKey(remoteId), localChannel);
 
   createLocalPeerConnection = async (remoteId: string) => {
     const iceServers = this.#iceServers;
