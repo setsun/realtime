@@ -1,4 +1,4 @@
-import io from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
 import {
   SignalingEvents,
@@ -22,14 +22,14 @@ const defaultIceServers = [
 
 export class RTCClient {
   #me = '';
-  #socket: SocketIOClient.Socket;
+  #socket: Socket;
   #users = new Set<string>();
   #connections = new Map<string, RTCPeerConnection>();
   #channels = new Map<string, RTCDataChannel>();
   #iceServers: RTCConfiguration['iceServers'];
 
   constructor({ url, iceServers }: RTCClientConfig) {
-    this.#socket = io.connect(url);
+    this.#socket = io(url);
     this.#iceServers = iceServers ?? defaultIceServers;
   }
 

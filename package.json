@@ -1,27 +1,25 @@
 {
   "name": "@raycaster/realtime",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A client and signaling server for WebRTC",
   "main": "dist/index.js",
   "license": "MIT",
   "engines": {
-    "node": ">= 12.16.0"
+    "node": ">= 14.0.0"
   },
   "scripts": {
-    "prepublish": "yarn build",
+    "prepublish": "npm run build",
     "build": "tsc"
   },
   "peerDependencies": {
-    "socket.io": "^2.3.0",
-    "socket.io-client": "^2.3.0"
+    "socket.io": "^3.0.4",
+    "socket.io-client": "^3.0.4"
   },
   "devDependencies": {
-    "@types/node": "14.6.0",
-    "@types/socket.io": "^2.1.11",
-    "@types/socket.io-client": "^1.4.33",
-    "socket.io": "^2.3.0",
-    "socket.io-client": "^2.3.0",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.0.2"
+    "@types/node": "14.14.14",
+    "socket.io": "^3.0.4",
+    "socket.io-client": "^3.0.4",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
   }
 }
