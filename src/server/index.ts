@@ -1,5 +1,5 @@
 import { Server as HTTPServer } from "http";
-import SocketIO, { Server as SocketIOServer, Socket } from "socket.io";
+import { Server as SocketIOServer, Socket } from "socket.io";
 import {
   SignalingEvents,
   SendOfferPayload,
@@ -16,7 +16,7 @@ export class SignalingServer {
   #socketServer: SocketIOServer;
 
   constructor({ server }: SignalingServerConfig) {
-    this.#socketServer = SocketIO(server);
+    this.#socketServer = new SocketIOServer(server);
     this.setupSockets();
   }
 
